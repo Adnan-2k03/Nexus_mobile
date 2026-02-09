@@ -43,6 +43,8 @@ function RootLayoutNav() {
         <Stack.Screen name="create-match" options={{ presentation: "modal" }} />
         <Stack.Screen name="connections" />
         <Stack.Screen name="chat/[id]" />
+        <Stack.Screen name="player/[id]" />
+        <Stack.Screen name="edit-profile" options={{ presentation: "modal" }} />
       </Stack>
     </>
   );
