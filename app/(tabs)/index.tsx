@@ -27,9 +27,8 @@ import {
   Region,
   SkillLevel,
   MatchType,
+  FeedType,
 } from "@/lib/game-data";
-
-type FeedTab = "lfg" | "lfo";
 
 function DropdownFilter({
   label,
@@ -171,8 +170,8 @@ const dropStyles = StyleSheet.create({
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { user, matches, joinMatch, canClaimDaily, claimDailyReward } = useGame();
-  const [activeTab, setActiveTab] = useState<FeedTab>("lfg");
+  const { user, matches, joinMatch, deleteMatch, canClaimDaily, claimDailyReward } = useGame();
+  const [activeTab, setActiveTab] = useState<FeedType>("lfg");
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [filterGame, setFilterGame] = useState("All games");
@@ -182,8 +181,17 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [showReward, setShowReward] = useState(false);
 
-  const filteredMatches = useMemo(() => {
-    let result = matches;
+  const myMatches = useMemo(() => {
+    if (!user) return [];
+    return matches.filter((m) => m.userId === user.id);
+  }, [matches, user]);
+
+  const feedMatches = useMemo(() => {
+    let result = matches.filter((m) => {
+      if (m.feedType && m.feedType !== activeTab) return false;
+      if (!m.feedType && activeTab === "lfo") return false;
+      return true;
+    });
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -207,7 +215,7 @@ export default function HomeScreen() {
       result = result.filter((m) => m.skillLevel === filterRank);
     }
     return result;
-  }, [matches, searchQuery, filterGame, filterMode, filterRegion, filterRank]);
+  }, [matches, activeTab, searchQuery, filterGame, filterMode, filterRegion, filterRank]);
 
   const handleJoin = useCallback(
     (id: string) => {
@@ -215,6 +223,14 @@ export default function HomeScreen() {
       joinMatch(id);
     },
     [joinMatch],
+  );
+
+  const handleDelete = useCallback(
+    (id: string) => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      deleteMatch(id);
+    },
+    [deleteMatch],
   );
 
   const handleClaimDaily = useCallback(async () => {
@@ -245,9 +261,9 @@ export default function HomeScreen() {
         <View style={styles.topLeft}>
           <Ionicons name="radio" size={20} color={Colors.dark.primary} />
           <Text style={styles.pageTitle}>Match Feed</Text>
-          <View style={styles.onlineBadge}>
-            <View style={styles.onlineDot} />
-            <Text style={styles.onlineText}>Online</Text>
+          <View style={styles.liveBadge}>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveText}>Live</Text>
           </View>
         </View>
         <View style={styles.topRight}>
@@ -256,10 +272,6 @@ export default function HomeScreen() {
               <Ionicons name="gift" size={16} color={Colors.dark.warning} />
             </Pressable>
           )}
-          <View style={styles.coinBadge}>
-            <Ionicons name="diamond" size={13} color={Colors.dark.warning} />
-            <Text style={styles.coinText}>{user?.coins || 0}</Text>
-          </View>
           <Pressable
             style={styles.createButton}
             onPress={() => router.push("/create-match")}
@@ -349,7 +361,7 @@ export default function HomeScreen() {
           </Text>
         </Pressable>
         <Pressable
-          style={[styles.tab, activeTab === "lfo" && styles.tabActive]}
+          style={[styles.tab, activeTab === "lfo" && styles.tabActiveLfo]}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             setActiveTab("lfo");
@@ -364,6 +376,31 @@ export default function HomeScreen() {
             LFO (Looking for Opponent)
           </Text>
         </Pressable>
+      </View>
+
+      {myMatches.length > 0 && (
+        <View style={styles.myPostsSection}>
+          <View style={styles.myPostsHeader}>
+            <Text style={styles.myPostsTitle}>Your Posts</Text>
+            <View style={styles.myPostsCount}>
+              <Text style={styles.myPostsCountText}>{myMatches.length}</Text>
+            </View>
+          </View>
+          {myMatches.map((match) => (
+            <MatchCard
+              key={match.id}
+              match={match}
+              onJoin={handleJoin}
+              onDelete={handleDelete}
+              isOwnMatch={true}
+            />
+          ))}
+        </View>
+      )}
+
+      <View style={styles.liveUpdateBar}>
+        <View style={styles.liveUpdateDot} />
+        <Text style={styles.liveUpdateText}>Live updates enabled - New matches appear automatically</Text>
       </View>
     </View>
   );
@@ -394,11 +431,12 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <FlatList
-        data={filteredMatches}
+        data={feedMatches}
         renderItem={({ item }) => (
           <MatchCard
             match={item}
             onJoin={handleJoin}
+            onDelete={handleDelete}
             isOwnMatch={item.userId === user?.id}
           />
         )}
@@ -446,21 +484,25 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontFamily: "Rajdhani_700Bold",
   },
-  onlineBadge: {
+  liveBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
+    backgroundColor: "rgba(0, 255, 136, 0.12)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
   },
-  onlineDot: {
+  liveDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
     backgroundColor: Colors.dark.success,
   },
-  onlineText: {
+  liveText: {
     color: Colors.dark.success,
     fontSize: 11,
-    fontFamily: "Rajdhani_500Medium",
+    fontFamily: "Rajdhani_600SemiBold",
   },
   topRight: {
     flexDirection: "row",
@@ -474,22 +516,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 184, 0, 0.15)",
     alignItems: "center",
     justifyContent: "center",
-  },
-  coinBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: Colors.dark.card,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: Colors.dark.cardBorder,
-  },
-  coinText: {
-    color: Colors.dark.warning,
-    fontSize: 12,
-    fontFamily: "Rajdhani_700Bold",
   },
   createButton: {
     flexDirection: "row",
@@ -620,6 +646,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: Colors.dark.primary,
   },
+  tabActiveLfo: {
+    backgroundColor: Colors.dark.glowMagenta,
+    borderBottomWidth: 2,
+    borderBottomColor: Colors.dark.secondary,
+  },
   tabText: {
     color: Colors.dark.textMuted,
     fontSize: 12,
@@ -630,6 +661,52 @@ const styles = StyleSheet.create({
   },
   tabTextActiveLfo: {
     color: Colors.dark.secondary,
+  },
+  myPostsSection: {
+    marginBottom: 14,
+  },
+  myPostsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 10,
+  },
+  myPostsTitle: {
+    color: Colors.dark.text,
+    fontSize: 16,
+    fontFamily: "Rajdhani_700Bold",
+  },
+  myPostsCount: {
+    backgroundColor: Colors.dark.tertiary,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  myPostsCountText: {
+    color: Colors.dark.text,
+    fontSize: 12,
+    fontFamily: "Rajdhani_700Bold",
+  },
+  liveUpdateBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 8,
+    marginBottom: 12,
+  },
+  liveUpdateDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.dark.error,
+  },
+  liveUpdateText: {
+    color: Colors.dark.textMuted,
+    fontSize: 11,
+    fontFamily: "Rajdhani_400Regular",
   },
   emptyState: {
     alignItems: "center",

@@ -12,6 +12,7 @@ import { MatchRequest } from "@/lib/game-data";
 interface MatchCardProps {
   match: MatchRequest;
   onJoin: (id: string) => void;
+  onDelete?: (id: string) => void;
   isOwnMatch?: boolean;
 }
 
@@ -52,9 +53,11 @@ function getSkillColor(skill: string): string {
   return colors[skill] || Colors.dark.textSecondary;
 }
 
-export default function MatchCard({ match, onJoin, isOwnMatch }: MatchCardProps) {
+export default function MatchCard({ match, onJoin, onDelete, isOwnMatch }: MatchCardProps) {
   const isFilled = match.status === "filled";
   const slotsText = `${match.playersJoined}/${match.playersNeeded}`;
+  const feedLabel = match.feedType === "lfo" ? "Looking for opponent" : "Looking for teammates";
+  const feedColor = match.feedType === "lfo" ? Colors.dark.secondary : Colors.dark.primary;
 
   return (
     <View style={styles.card}>
@@ -67,28 +70,29 @@ export default function MatchCard({ match, onJoin, isOwnMatch }: MatchCardProps)
         <View style={styles.headerInfo}>
           <View style={styles.nameRow}>
             <Text style={styles.gamertag}>{match.gamertag}</Text>
-            <View style={styles.levelBadge}>
-              <Text style={styles.levelText}>Lv.{match.level}</Text>
-            </View>
           </View>
-          <Text style={styles.timeText}>{timeAgo(match.createdAt)}</Text>
+          <View style={styles.gameSubRow}>
+            <Text style={styles.gameNameSmall}>{match.gameName}</Text>
+            <Text style={styles.dotSep}>  </Text>
+            <Ionicons name="people-outline" size={12} color={Colors.dark.textMuted} />
+            <Text style={styles.tagTextSmall}>{match.gameMode}</Text>
+          </View>
         </View>
-        <View style={[styles.statusBadge, isFilled && styles.filledBadge]}>
-          <Text style={[styles.statusText, isFilled && styles.filledText]}>
-            {isFilled ? "FILLED" : "OPEN"}
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.gameRow}>
-        <MaterialCommunityIcons
-          name={(GAME_ICONS[match.gameName] || "gamepad-variant") as any}
-          size={18}
-          color={Colors.dark.primary}
-        />
-        <Text style={styles.gameName}>{match.gameName}</Text>
-        <View style={styles.modeBadge}>
-          <Text style={styles.modeText}>{match.gameMode}</Text>
+        <View style={styles.rightCol}>
+          <View style={[styles.feedBadge, { backgroundColor: `${feedColor}20`, borderColor: `${feedColor}40` }]}>
+            <Text style={[styles.feedBadgeText, { color: feedColor }]}>
+              {feedLabel}
+            </Text>
+          </View>
+          {isOwnMatch && onDelete && (
+            <Pressable
+              style={styles.deleteBtn}
+              onPress={() => onDelete(match.id)}
+            >
+              <Ionicons name="trash-outline" size={14} color={Colors.dark.error} />
+              <Text style={styles.deleteText}>Delete</Text>
+            </Pressable>
+          )}
         </View>
       </View>
 
@@ -96,14 +100,12 @@ export default function MatchCard({ match, onJoin, isOwnMatch }: MatchCardProps)
 
       <View style={styles.tagsRow}>
         <View style={styles.tag}>
-          <Ionicons name="globe-outline" size={12} color={Colors.dark.textSecondary} />
-          <Text style={styles.tagText}>{match.region}</Text>
+          <Ionicons name="time-outline" size={12} color={Colors.dark.textSecondary} />
+          <Text style={styles.tagText}>{timeAgo(match.createdAt)}</Text>
         </View>
         <View style={styles.tag}>
-          <Ionicons name="trophy-outline" size={12} color={getSkillColor(match.skillLevel)} />
-          <Text style={[styles.tagText, { color: getSkillColor(match.skillLevel) }]}>
-            {match.skillLevel}
-          </Text>
+          <Ionicons name="globe-outline" size={12} color={Colors.dark.textSecondary} />
+          <Text style={styles.tagText}>{match.region}</Text>
         </View>
         <View style={styles.tag}>
           <Ionicons name="people-outline" size={12} color={Colors.dark.textSecondary} />
@@ -120,7 +122,7 @@ export default function MatchCard({ match, onJoin, isOwnMatch }: MatchCardProps)
           onPress={() => onJoin(match.id)}
         >
           <Ionicons name="flash" size={16} color="#0A0E1A" />
-          <Text style={styles.joinText}>Join Match</Text>
+          <Text style={styles.joinText}>Apply</Text>
         </Pressable>
       )}
     </View>
@@ -138,7 +140,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     marginBottom: 12,
   },
   avatar: {
@@ -167,63 +169,48 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: "Rajdhani_600SemiBold",
   },
-  levelBadge: {
-    backgroundColor: Colors.dark.glowPurple,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 6,
-  },
-  levelText: {
-    color: Colors.dark.tertiary,
-    fontSize: 11,
-    fontFamily: "Rajdhani_600SemiBold",
-  },
-  timeText: {
-    color: Colors.dark.textMuted,
-    fontSize: 12,
-    fontFamily: "Rajdhani_400Regular",
-    marginTop: 1,
-  },
-  statusBadge: {
-    backgroundColor: Colors.dark.glowCyan,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  filledBadge: {
-    backgroundColor: Colors.dark.glowMagenta,
-  },
-  statusText: {
-    color: Colors.dark.primary,
-    fontSize: 11,
-    fontFamily: "Rajdhani_700Bold",
-    letterSpacing: 1,
-  },
-  filledText: {
-    color: Colors.dark.secondary,
-  },
-  gameRow: {
+  gameSubRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    marginBottom: 8,
+    gap: 4,
+    marginTop: 2,
   },
-  gameName: {
-    color: Colors.dark.text,
-    fontSize: 14,
-    fontFamily: "Rajdhani_600SemiBold",
-    flex: 1,
-  },
-  modeBadge: {
-    borderWidth: 1,
-    borderColor: Colors.dark.cardBorder,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  modeText: {
+  gameNameSmall: {
     color: Colors.dark.textSecondary,
+    fontSize: 12,
+    fontFamily: "Rajdhani_500Medium",
+  },
+  dotSep: {
+    color: Colors.dark.textMuted,
+    fontSize: 10,
+  },
+  tagTextSmall: {
+    color: Colors.dark.textSecondary,
+    fontSize: 12,
+    fontFamily: "Rajdhani_500Medium",
+  },
+  rightCol: {
+    alignItems: "flex-end",
+    gap: 6,
+  },
+  feedBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  feedBadgeText: {
     fontSize: 11,
+    fontFamily: "Rajdhani_600SemiBold",
+  },
+  deleteBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  deleteText: {
+    color: Colors.dark.error,
+    fontSize: 12,
     fontFamily: "Rajdhani_500Medium",
   },
   description: {
@@ -237,6 +224,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
     marginBottom: 12,
+    flexWrap: "wrap",
   },
   tag: {
     flexDirection: "row",
