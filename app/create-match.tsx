@@ -25,11 +25,13 @@ import {
   Region,
   SkillLevel,
   MatchType,
+  FeedType,
 } from "@/lib/game-data";
 
 export default function CreateMatchScreen() {
   const insets = useSafeAreaInsets();
   const { createMatch, user, spendCoins } = useGame();
+  const [feedType, setFeedType] = useState<FeedType>("lfg");
   const [game, setGame] = useState<Game | null>(null);
   const [region, setRegion] = useState<Region | null>(null);
   const [skill, setSkill] = useState<SkillLevel | null>(null);
@@ -55,6 +57,7 @@ export default function CreateMatchScreen() {
       gameMode: mode!,
       description: description.trim(),
       playersNeeded,
+      feedType,
     });
     router.back();
   };
@@ -83,6 +86,34 @@ export default function CreateMatchScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          <Text style={styles.label}>Post Type</Text>
+          <View style={styles.feedTypeRow}>
+            <Pressable
+              style={[styles.feedTypeBtn, feedType === "lfg" && styles.feedTypeBtnActive]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setFeedType("lfg");
+              }}
+            >
+              <Ionicons name="people" size={16} color={feedType === "lfg" ? Colors.dark.primary : Colors.dark.textMuted} />
+              <Text style={[styles.feedTypeText, feedType === "lfg" && styles.feedTypeTextActive]}>
+                LFG (Looking for Group)
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[styles.feedTypeBtn, feedType === "lfo" && styles.feedTypeBtnActiveLfo]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setFeedType("lfo");
+              }}
+            >
+              <Ionicons name="radio-button-on" size={14} color={feedType === "lfo" ? Colors.dark.secondary : Colors.dark.textMuted} />
+              <Text style={[styles.feedTypeText, feedType === "lfo" && styles.feedTypeTextActiveLfo]}>
+                LFO (Looking for Opponent)
+              </Text>
+            </Pressable>
+          </View>
+
           <Text style={styles.label}>Game</Text>
           <ScrollView
             horizontal
@@ -305,6 +336,42 @@ const styles = StyleSheet.create({
     fontFamily: "Rajdhani_600SemiBold",
     marginBottom: 10,
     letterSpacing: 0.5,
+  },
+  feedTypeRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 20,
+  },
+  feedTypeBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.dark.cardBorder,
+    backgroundColor: Colors.dark.card,
+  },
+  feedTypeBtnActive: {
+    borderColor: Colors.dark.primary,
+    backgroundColor: Colors.dark.glowCyan,
+  },
+  feedTypeBtnActiveLfo: {
+    borderColor: Colors.dark.secondary,
+    backgroundColor: Colors.dark.glowMagenta,
+  },
+  feedTypeText: {
+    color: Colors.dark.textMuted,
+    fontSize: 12,
+    fontFamily: "Rajdhani_600SemiBold",
+  },
+  feedTypeTextActive: {
+    color: Colors.dark.primary,
+  },
+  feedTypeTextActiveLfo: {
+    color: Colors.dark.secondary,
   },
   chipRow: {
     gap: 8,

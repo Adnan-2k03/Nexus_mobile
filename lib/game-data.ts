@@ -60,6 +60,8 @@ export interface UserProfile {
   createdAt: string;
 }
 
+export type FeedType = "lfg" | "lfo";
+
 export interface MatchRequest {
   id: string;
   userId: string;
@@ -75,6 +77,7 @@ export interface MatchRequest {
   playersJoined: number;
   createdAt: string;
   level: number;
+  feedType: FeedType;
 }
 
 export interface Connection {
@@ -189,6 +192,7 @@ export function generateMockMatches(): MatchRequest[] {
         Date.now() - Math.floor(Math.random() * 3600000),
       ).toISOString(),
       level: Math.floor(Math.random() * 50) + 1,
+      feedType: i % 3 === 0 ? "lfo" : "lfg",
     });
   }
   return matches;

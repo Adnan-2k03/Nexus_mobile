@@ -20,6 +20,7 @@ import {
   Region,
   SkillLevel,
   MatchType,
+  FeedType,
   generateMockMatches,
   generateMockConnections,
   generateMockConversations,
@@ -38,6 +39,7 @@ interface GameContextValue {
   createProfile: (profile: Partial<UserProfile>) => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
   createMatch: (match: Partial<MatchRequest>) => Promise<void>;
+  deleteMatch: (matchId: string) => Promise<void>;
   joinMatch: (matchId: string) => Promise<void>;
   sendConnectionRequest: (userId: string, gamertag: string, avatar: string, games: Game[], level: number) => Promise<void>;
   acceptConnection: (connectionId: string) => Promise<void>;
@@ -198,11 +200,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
       playersJoined: 0,
       createdAt: new Date().toISOString(),
       level: user.level,
+      feedType: match.feedType || "lfg",
     };
     const updated = [newMatch, ...matches];
     await saveMatches(updated);
     await addXp(10);
   }, [user, matches]);
+
+  const deleteMatch = useCallback(async (matchId: string) => {
+    const updated = matches.filter((m) => m.id !== matchId);
+    await saveMatches(updated);
+  }, [matches]);
 
   const joinMatch = useCallback(async (matchId: string) => {
     const updated = matches.map((m) => {
@@ -351,6 +359,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       createProfile,
       updateProfile,
       createMatch,
+      deleteMatch,
       joinMatch,
       sendConnectionRequest,
       acceptConnection,
@@ -372,6 +381,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       createProfile,
       updateProfile,
       createMatch,
+      deleteMatch,
       joinMatch,
       sendConnectionRequest,
       acceptConnection,

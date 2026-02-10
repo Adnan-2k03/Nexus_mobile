@@ -1,0 +1,44 @@
+This screenshot captures the primary interface where players discover match opportunities in real-time.
+The Match Feed is divided into two tabs serving distinct use cases: - LFG (Looking for
+Group): Players seeking teammates for cooperative gameplay—whether for ranked matches,
+casual games, or tournament practice - LFO (Looking for Opponent): Players or teams
+seeking opponents for scrimmages, 1v1 challenges, or competitive practice
+Each match card displays the game title with username where other could checkout user’s
+skills by going through his profile portfolio. The post contains description where creater could
+pu t: required skill tier, scheduled time, region, and current roster status etc.
+The "All Regions" dropdown allows filtering by geographic location (NA, EU, ASIA, OCE,
+etc.) to ensure players find teammates with acceptable ping/latency for competitive play.
+Most importantly, the feed updates in real-time. When another player posts a match anywhere
+in the world, it appears in your feed within 45 milliseconds—no page refresh required. This is
+powered by our WebSocket infrastructure that maintains persistent connections with all
+active users.
+The Apply button initiates the connection process, sending your profile to the match creator for review
+
+
+
+
+
+
+
+
+this is how that page must work..is it doing? make it work.
+
+
+
+same for dsicover page :
+
+Explanation:
+The Discover Gamers page enables proactive player discovery beyond responding to match postings.
+Each player card provides a snapshot of a potential teammate: Location: Geographic region
+for latency considerations (displayed as country/region, not exact location for privacy) - Bio:
+Player's self-description, gaming preferences, and personality - Gaming Icons: Visual
+indicators of which games they play
+The search and filter functionality (notshown but accessiblevia the top bar) allows filtering by:
+- nearby(1km?5km?100km?)- Specific games - Skill tier ranges - Availability windows -
+Region/timezone
+This browsing experience mirrors social platforms but is purpose-built for gaming. Unlike
+LinkedIn for professionals or Tinder for dating, Nexus is designed specifically for gamers
+to find compatible teammates.
+The "Connect" button initiates a connection request. Once both parties accept, they become
+connectioned—able to message each other, see each other's onlinestatus, and invite each
+other to matches and voice channels at any time.
